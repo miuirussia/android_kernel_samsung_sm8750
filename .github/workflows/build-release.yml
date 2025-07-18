@@ -84,15 +84,20 @@ jobs:
             wget -O toolchain.part00 "https://github.com/YuzakiKokuban/android_kernel_samsung_sm8750/releases/download/toolchain/toolchainS25.tar.gz.00"
             wget -O toolchain.part01 "https://github.com/YuzakiKokuban/android_kernel_samsung_sm8750/releases/download/toolchain/toolchainS25.tar.gz.01"
 
+            echo "Merging toolchain archive..."
             cat toolchain.part* > toolchain.tar.gz
             mkdir -p ./toolchain_temp
             tar -xzvf toolchain.tar.gz -C ./toolchain_temp/
 
+            echo "Moving toolchain..."
             mkdir -p ./toolchain
             mv ./toolchain_temp/kernel_platform ./toolchain/
             rm toolchain.part* toolchain.tar.gz
             rm -rf ./toolchain_temp
           fi
 
-          tree .
+      - name: Add SukiSU Ultra
+        run: |
+          cd "$CONFIG"
 
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-test
