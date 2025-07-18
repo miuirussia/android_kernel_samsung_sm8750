@@ -112,6 +112,9 @@ jobs:
           cp ../susfs4ksu/kernel_patches/fs/* ./fs/
           cp ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
 
+          # Patch Samsung includes
+          sed -i '/#include <trace\/hooks\/blk.h>/a #include <trace/hooks/fs.h>' ./fs/namespace.c
+
           patch -p1 --fuzz=3 < 50_add_susfs_in_gki-android15-6.6.patch
 
       - name: Apply SukiSU Ultra syscall hook
