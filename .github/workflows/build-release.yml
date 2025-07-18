@@ -101,3 +101,177 @@ jobs:
           cd "$CONFIG"
 
           curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-test
+
+      - name: Apply SUSFS patch for SukiSU Ultra
+        run: |
+          echo "Change directory: $CONFIG..."
+          cd "$CONFIG"
+
+          echo "Applying SUSFS patches..."
+          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./
+          cp ../susfs4ksu/kernel_patches/fs/* ./fs/
+          cp ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
+
+          patch -p1 --fuzz=3 < 50_add_susfs_in_gki-android15-6.6.patch
+
+      - name: Apply SukiSU Ultra syscall hook
+        run: |
+          echo "Change directory: $CONFIG..."
+          cd "$CONFIG"
+
+          cp ../SukiSU_patch/hooks/syscall_hooks.patch ./
+          patch -p1 --fuzz=3 < syscall_hooks.patch
+
+      - name: Apply Hide Stuff Patches
+        run: |
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG"
+          # Apply spoof patch
+          cp ../SukiSU_patch/69_hide_stuff.patch ./
+          patch -p1 --fuzz=3 < 69_hide_stuff.patch
+
+      - name: Add SUSFS Configuration Settings
+        run: |
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG"
+
+          echo "Adding configuration settings to gki_defconfig..."
+
+          # Add KSU configuration settings
+          echo "CONFIG_KSU=y" >> ./arch/arm64/configs/gki_defconfig
+
+          # Add SukiSU configuration settings
+          echo "CONFIG_KPM=y" >> ./arch/arm64/configs/gki_defconfig
+
+          # Add SukiSU manual hook
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./arch/arm64/configs/gki_defconfig
+
+          # Add tmpfs config setting
+          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./arch/arm64/configs/gki_defconfig
+
+          # Add tethering config setting
+          echo "CONFIG_IP_NF_TARGET_TTL=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./arch/arm64/configs/gki_defconfig
+
+          # Add bbr and fq config setting
+          echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TCP_CONG_BBR=y" >> ./arch/arm64/configs/gki_defconfig
+          #echo "CONFIG_DEFAULT_CUBIC=n" >> ./arch/arm64/configs/gki_defconfig
+          #echo "CONFIG_DEFAULT_BBR=y" >> ./arch/arm64/configs/gki_defconfig
+          #echo 'CONFIG_DEFAULT_TCP_CONG="bbr"' >> ./arch/arm64/configs/gki_defconfig
+          #echo "CONFIG_NET_SCH_DEFAULT=y" >> ./arch/arm64/configs/gki_defconfig
+          #echo "CONFIG_DEFAULT_FQ=y" >> ./arch/arm64/configs/gki_defconfig
+          #echo 'CONFIG_DEFAULT_NET_SCH="fq"' >> ./arch/arm64/configs/gki_defconfig
+          #echo "CONFIG_NET_SCH_HTB=n" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TCP_CONG_BIC=n" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TCP_CONG_HTCP=n" >> ./arch/arm64/configs/gki_defconfig
+
+          # Add SUSFS configuration settings
+          echo "CONFIG_KSU_SUSFS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=n" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./arch/arm64/configs/gki_defconfig
+
+          # Add rcu config setting
+          echo "CONFIG_RCU_TRACE=n" >> ./arch/arm64/configs/gki_defconfig
+
+          # Add personal config setting
+          echo "CONFIG_IP_NF_TARGET_ECN=y" >> ./arch/arm64/configs/gki_defconfig
+
+      - name: Force ECN + Reduce overhead
+        run: |
+          cd "$CONFIG/net/ipv4"
+
+          sed -i 's/net->ipv4.sysctl_tcp_ecn = 2;/net->ipv4.sysctl_tcp_ecn = 1;/' tcp_ipv4.c
+          grep "sysctl_tcp_ecn" tcp_ipv4.c
+          #sed -i '/\.procname[[:space:]]*=[[:space:]]*"tcp_ecn"/, /^[[:space:]]*\}/ s/SYSCTL_TWO/SYSCTL_ONE/' sysctl_net_ipv4.c
+          grep -A6 '\.procname.*tcp_ecn' sysctl_net_ipv4.c
+          sed -i 's/net->ipv4.sysctl_tcp_pacing_ss_ratio = 200;/net->ipv4.sysctl_tcp_pacing_ss_ratio = 150;/' tcp_ipv4.c
+          sed -i 's/net->ipv4.sysctl_tcp_pacing_ca_ratio = 120;/net->ipv4.sysctl_tcp_pacing_ca_ratio = 110;/' tcp_ipv4.c
+          grep "sysctl_tcp_pacing" tcp_ipv4.c
+          ls -t | grep -E 'tcp_|sysctl_'
+
+      - name: Build kernel
+        run: |
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG"
+
+          echo "Building the kernel..."
+
+          # Clear Cache
+          sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'
+
+          # Remove protected exports
+          if [ -e BUILD.bazel ]; then
+            sed -i '/^[[:space:]]*"protected_exports_list"[[:space:]]*:[[:space:]]*"android\/abi_gki_protected_exports_aarch64",$/d' BUILD.bazel
+          fi
+          rm ./android/abi_gki_protected_exports_* || echo "No protected exports!"
+
+          MAIN_DEFCONFIG=sun_gki_defconfig
+          LOCALVERSION_BASE=-android15-kdevlab-AYF1
+          TOOLCHAIN=$(realpath "../toolchain/kernel_platform/prebuilts")
+
+          export PATH=$TOOLCHAIN/build-tools/linux-x86/bin:$PATH
+          export PATH=$TOOLCHAIN/build-tools/path/linux-x86:$PATH
+          export PATH=$TOOLCHAIN/clang/host/linux-x86/clang-r510928/bin:$PATH
+          export PATH=$TOOLCHAIN/clang-tools/linux-x86/bin:$PATH
+          export PATH=$TOOLCHAIN/kernel-build-tools/linux-x86/bin:$PATH
+
+          LLD_COMPILER_RT="-fuse-ld=lld --rtlib=compiler-rt"
+          sysroot_flags+="--sysroot=$TOOLCHAIN/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8/sysroot "
+          cflags+="-I$TOOLCHAIN/kernel-build-tools/linux-x86/include "
+          ldflags+="-L $TOOLCHAIN/kernel-build-tools/linux-x86/lib64 "
+          ldflags+=${LLD_COMPILER_RT}
+          export LD_LIBRARY_PATH="$TOOLCHAIN/kernel-build-tools/linux-x86/lib64"
+          export HOSTCFLAGS="$sysroot_flags $cflags"
+          export HOSTLDFLAGS="$sysroot_flags $ldflags"
+
+          MAKE_ARGS="
+          O=out
+          ARCH=arm64
+          CC=clang
+          LLVM=1
+          LLVM_IAS=1
+          "
+
+          echo "Generate defconfig '$MAIN_DEFCONFIG'..."
+          make ${MAKE_ARGS} $MAIN_DEFCONFIG
+          if [ $? -ne 0 ]; then
+            echo "Failed to generate defconfig '$MAIN_DEFCONFIG'"
+            exit 1
+          fi
+
+          echo "Disable security features..."
+          ./scripts/config --file out/.config \
+            -d UH -d RKP -d KDP -d SECURITY_DEFEX -d INTEGRITY -d FIVE \
+            -d TRIM_UNUSED_KSYMS -d PROCA -d PROCA_GKI_10 -d PROCA_S_OS \
+            -d PROCA_CERTIFICATES_XATTR -d PROCA_CERT_ENG -d PROCA_CERT_USER \
+            -d GAF -d GAF_V6 -d FIVE_CERT_USER -d FIVE_DEFAULT_HASH
+
+          echo "Enable ThinLTO"
+          ./scripts/config --file out/.config -e LTO_CLANG_THIN -d LTO_CLANG_FULL
+
+
+          version_string="${LOCALVERSION_BASE}-g$(git rev-parse --short HEAD)"
+          echo "${version_string}" > ./localversion
+
+          make -j$(nproc) ${MAKE_ARGS}
+
+          kernel_release=$(cat ./include/config/kernel.release)
+
+          echo "Kernel release: $kernel_release"
