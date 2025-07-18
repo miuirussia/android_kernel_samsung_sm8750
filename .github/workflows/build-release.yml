@@ -6,8 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
 
     steps:
       - name: Maximize Build Space
@@ -224,6 +222,7 @@ jobs:
             sed -i '/^[[:space:]]*"protected_exports_list"[[:space:]]*:[[:space:]]*"android\/abi_gki_protected_exports_aarch64",$/d' BUILD.bazel
           fi
           rm ./android/abi_gki_protected_exports_* || echo "No protected exports!"
+          rm ./android/gki_*_protected_modules || echo "No protected exports!"
 
           MAIN_DEFCONFIG=sun_gki_defconfig
           LOCALVERSION_BASE=-android15-kdevlab-AYF1
@@ -274,6 +273,9 @@ jobs:
           echo "${version_string}" > ./localversion
 
           make -j$(nproc) ${MAKE_ARGS}
+
+          echo "--- FIND in $(pwd) ---"
+          find . -name "kernel.release"
 
           kernel_release=$(cat ./include/config/kernel.release)
 
