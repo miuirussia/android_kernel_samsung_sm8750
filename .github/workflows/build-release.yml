@@ -274,9 +274,6 @@ jobs:
 
           make -j$(nproc) ${MAKE_ARGS}
 
-          echo "--- FIND in $(pwd) ---"
-          find . -name "kernel.release"
-
-          kernel_release=$(cat ./include/config/kernel.release)
+          kernel_release=$(cat ./out/include/config/kernel.release)
 
           echo "Kernel release: $kernel_release"
