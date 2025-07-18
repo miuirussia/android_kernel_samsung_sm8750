@@ -52,6 +52,14 @@ jobs:
             libncurses-dev liblz4-tool zlib1g-dev \
             libxml2-utils rsync unzip
 
+      - name: Restore toolchain from cache
+        uses: actions/cache@v4
+        with:
+          path: toolchain
+          key: toolchain-${{ github.sha }}
+          restore-keys: |
+            toolchain-
+
       - name: Clone AnyKernel3 and Other Dependencies
         run: |
           echo "Cloning AnyKernel3 and other dependencies..."
@@ -71,4 +79,20 @@ jobs:
           # SukiSU patches
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
 
+          if [ ! -d toolchain ]; then
+            echo "Download and unpack toolchain..."
+            wget -O toolchain.part00 "https://github.com/YuzakiKokuban/android_kernel_samsung_sm8750/releases/download/toolchain/toolchainS25.tar.gz.00"
+            wget -O toolchain.part01 "https://github.com/YuzakiKokuban/android_kernel_samsung_sm8750/releases/download/toolchain/toolchainS25.tar.gz.01"
+
+            cat toolchain.part* > toolchain.tar.gz
+            mkdir -p ./toolchain_temp
+            tar -xzvf toolchain.tar.gz -C ./toolchain_temp/
+
+            mkdir -p ./toolchain
+            mv ./toolchain_temp/kernel_platform ./toolchain/
+            rm toolchain.part* toolchain.tar.gz
+            rm -rf ./toolchain_temp
+          fi
+
           tree .
+
