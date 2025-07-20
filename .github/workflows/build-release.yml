@@ -13,6 +13,7 @@ jobs:
 
     env:
       CCACHE_DIR: ${{github.workspace}}/ccache
+      CONFIG: sun
 
     steps:
       - name: Maximize Build Space
@@ -34,16 +35,6 @@ jobs:
           sudo swapon /swapfile
           free -h
 
-      - name: Set CONFIG Environment Variable
-        run: |
-          CONFIG="sun"
-
-          # Set CONFIG as an environment variable for future steps
-          echo "CONFIG=$CONFIG" >> $GITHUB_ENV
-
-          echo "CONFIG set to: $CONFIG"
-
-      # Install ccache
       - name: Install ccache
         run: sudo apt update && sudo apt upgrade -y && sudo apt install -y ccache python3 git curl
 
@@ -52,14 +43,6 @@ jobs:
           ccache --version
           ccache --max-size=2G
           ccache --set-config=compression=true
-
-      - name: Restore ccache from cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ github.sha }}
-          restore-keys: |
-            ccache-
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -75,13 +58,41 @@ jobs:
             libncurses-dev liblz4-tool zlib1g-dev \
             libxml2-utils rsync unzip
 
+      - name: Restore ccache from cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ github.sha }}
+          restore-keys: |
+            ccache-
+
       - name: Restore toolchain from cache
+        id: toolchain-cache
         uses: actions/cache@v4
         with:
           path: toolchain
           key: toolchain-${{ github.sha }}
           restore-keys: |
             toolchain-
+
+      - name: Download toolchain
+        if: steps.toolchain-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "Download and unpack toolchain..."
+          wget -O toolchain.part00 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_aa"
+          wget -O toolchain.part01 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_ab"
+          wget -O toolchain.part02 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_ac"
+
+          echo "Merging toolchain archive..."
+          cat toolchain.part* > toolchain.tar.gz
+          mkdir -p ./toolchain_temp
+          tar -xzvf toolchain.tar.gz -C ./toolchain_temp/
+
+          echo "Moving toolchain..."
+          mkdir -p ./toolchain
+          mv ./toolchain_temp/kernel_platform ./toolchain/
+          rm toolchain.part* toolchain.tar.gz
+          rm -rf ./toolchain_temp
 
       - name: Clone AnyKernel3 and Other Dependencies
         run: |
@@ -101,24 +112,6 @@ jobs:
 
           # SukiSU patches
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
-
-          if [ ! -d toolchain ]; then
-            echo "Download and unpack toolchain..."
-            wget -O toolchain.part00 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_aa"
-            wget -O toolchain.part01 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_ab"
-            wget -O toolchain.part02 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_ac"
-
-            echo "Merging toolchain archive..."
-            cat toolchain.part* > toolchain.tar.gz
-            mkdir -p ./toolchain_temp
-            tar -xzvf toolchain.tar.gz -C ./toolchain_temp/
-
-            echo "Moving toolchain..."
-            mkdir -p ./toolchain
-            mv ./toolchain_temp/kernel_platform ./toolchain/
-            rm toolchain.part* toolchain.tar.gz
-            rm -rf ./toolchain_temp
-          fi
 
       - name: Add SukiSU Ultra
         run: |
