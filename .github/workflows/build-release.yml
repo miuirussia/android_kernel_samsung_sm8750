@@ -59,7 +59,7 @@ jobs:
             libxml2-utils rsync unzip
 
       - name: Restore ccache from cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ github.sha }}
@@ -68,7 +68,7 @@ jobs:
 
       - name: Restore toolchain from cache
         id: toolchain-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: toolchain
           key: toolchain-${{ github.sha }}
@@ -76,7 +76,7 @@ jobs:
             toolchain-
 
       - name: Download toolchain
-        if: steps.toolchain-cache.outputs.cache-hit != 'true'
+        if: ${{ !steps.toolchain-cache.outputs.cache-matched-key }}
         run: |
           echo "Download and unpack toolchain..."
           wget -O toolchain.part00 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_aa"
@@ -327,3 +327,15 @@ jobs:
           path: |
             ./dist/*AnyKernel3.zip
             ./dist/Image
+
+      - name: Save ccache to cache
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ github.sha }}
+
+      - name: Save toolchain to cache
+        uses: actions/cache/save@v4
+        with:
+          path: toolchain
+          key: toolchain-${{ github.sha }}
