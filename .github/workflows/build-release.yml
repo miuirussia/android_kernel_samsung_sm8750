@@ -268,7 +268,6 @@ jobs:
           echo "Enable ThinLTO"
           ./scripts/config --file out/.config -e LTO_CLANG_THIN -d LTO_CLANG_FULL
 
-
           version_string="${LOCALVERSION_BASE}-g$(git rev-parse --short HEAD)"
           echo "${version_string}" > ./localversion
 
@@ -277,3 +276,5 @@ jobs:
           kernel_release=$(cat ./out/include/config/kernel.release)
 
           echo "Kernel release: $kernel_release"
+
+          tree ./out
