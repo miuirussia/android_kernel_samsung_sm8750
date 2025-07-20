@@ -305,4 +305,32 @@ jobs:
 
           echo "Kernel release: $kernel_release"
 
-          tree ./out
+          pushd ./out/arch/arm64/boot
+
+          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
+          chmod +x patch
+          ./patch
+          rm -rf Image
+          mv oImage Image
+
+          popd
+
+          mkdir -p ../dist
+          cp ./out/arch/arm64/boot/Image ../dist/Image
+
+      - name: Create AnyKernel zip
+        run: |
+          cd ./AnyKernel3
+
+          ZIP_NAME="S25-AnyKernel3.zip"
+          echo "Creating zip file: $ZIP_NAME..."
+          cp ../dist/Image ./Image
+          zip -r "../dist/S25-AnyKernel3.zip" ./*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: S25-kernel
+          path: |
+            ./dist/*AnyKernel3.zip
+            ./dist/Image
