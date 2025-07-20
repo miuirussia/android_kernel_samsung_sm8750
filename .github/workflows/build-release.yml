@@ -3,6 +3,10 @@ name: Build kernel and release
 on:
   workflow_dispatch:
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -292,7 +296,7 @@ jobs:
           version_string="${LOCALVERSION_BASE}-g$(git rev-parse --short HEAD)"
           echo "${version_string}" > ./localversion
 
-          make -j$(nproc) ${MAKE_ARGS}
+          make -j$(nproc) "${MAKE_ARGS[@]}"
 
           kernel_release=$(cat ./out/include/config/kernel.release)
 
