@@ -36,6 +36,25 @@ jobs:
 
           echo "CONFIG set to: $CONFIG"
 
+      # Install ccache
+      - name: Install ccache
+        run: sudo apt update && sudo apt upgrade -y && sudo apt install -y ccache python3 git curl
+
+      - name: Configuring ccache for faster builds
+        run: |
+          ccache --version
+          ccache --max-size=2G
+          ccache --set-config=compression=true
+          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
+
+      - name: Restore ccache from cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HOME }}/.ccache
+          key: ccache-${{ github.sha }}
+          restore-keys: |
+            ccache-
+
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
@@ -246,7 +265,7 @@ jobs:
           MAKE_ARGS="
           O=out
           ARCH=arm64
-          CC=clang
+          CC=/usr/bin/ccache clang
           LLVM=1
           LLVM_IAS=1
           "
