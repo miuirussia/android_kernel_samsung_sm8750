@@ -79,9 +79,9 @@ jobs:
         if: ${{ !steps.toolchain-cache.outputs.cache-matched-key }}
         run: |
           echo "Download and unpack toolchain..."
-          wget -O toolchain.part00 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_aa"
-          wget -O toolchain.part01 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_ab"
-          wget -O toolchain.part02 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_ac"
+          curl -L "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_aa" > toolchain.part00
+          curl -L "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_ab" > toolchain.part01
+          curl -L "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_ac" > toolchain.part02
 
           echo "Merging toolchain archive..."
           cat toolchain.part* > toolchain.tar.gz
