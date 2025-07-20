@@ -104,8 +104,9 @@ jobs:
 
           if [ ! -d toolchain ]; then
             echo "Download and unpack toolchain..."
-            wget -O toolchain.part00 "https://github.com/YuzakiKokuban/android_kernel_samsung_sm8750/releases/download/toolchain/toolchainS25.tar.gz.00"
-            wget -O toolchain.part01 "https://github.com/YuzakiKokuban/android_kernel_samsung_sm8750/releases/download/toolchain/toolchainS25.tar.gz.01"
+            wget -O toolchain.part00 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_aa"
+            wget -O toolchain.part01 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_ab"
+            wget -O toolchain.part02 "https://github.com/miuirussia/android_kernel_samsung_sm8750/releases/download/toolchain/toolchain.tar.gz.part_ac"
 
             echo "Merging toolchain archive..."
             cat toolchain.part* > toolchain.tar.gz
