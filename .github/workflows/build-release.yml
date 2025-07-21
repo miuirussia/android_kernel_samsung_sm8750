@@ -59,6 +59,7 @@ jobs:
             libxml2-utils rsync unzip
 
       - name: Restore ccache from cache
+        id: ccache-cache
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -329,12 +330,14 @@ jobs:
             ./dist/Image
 
       - name: Save ccache to cache
+        if: ${{ !!steps.ccache-cache.outputs.cache-matched-key }}
         uses: actions/cache/save@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ github.sha }}
 
       - name: Save toolchain to cache
+        if: ${{ !!steps.toolchain-cache.outputs.cache-matched-key }}
         uses: actions/cache/save@v4
         with:
           path: toolchain
