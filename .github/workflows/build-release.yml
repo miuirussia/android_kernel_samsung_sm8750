@@ -35,10 +35,10 @@ jobs:
             unixodbc-dev yarn chrpath libssl-dev libxft-dev \
             libfreetype6 libfreetype6-dev libfontconfig1 libfontconfig1-dev \
             snmp pollinate libpq-dev postgresql-client powershell ruby-full \
-            sphinxsearch subversion mongodb-org microsoft-edge-stable firefox || true
+            sphinxsearch subversion mongodb-org microsoft-edge-stable snapd || true
           
           # Regex-based purges (for bulk families like mysql, php, dotnet)
-          sudo apt-get purge -y $(dpkg-query -W -f='${binary:Package}\n' | grep -E '^mysql|^php|^dotnet|^apache2') || true
+          sudo apt-get purge -y $(dpkg-query -W -f='${binary:Package}\n' | grep -E '^mysql|^php|^dotnet|^apache2|^snapd') || true
           
           # Clean up
           sudo apt-get autoremove -y
