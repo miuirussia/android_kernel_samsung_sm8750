@@ -9,6 +9,7 @@ concurrency:
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
 
     env:
@@ -20,31 +21,30 @@ jobs:
       - name: Maximize build space
         run: |
           df -h
-          
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/powershell /usr/share/swift || true
+
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/powershell /usr/share/swift
           sudo docker image prune --all --force
           echo "some directories deleted"
-          
+
+          # Regex-based purges (for bulk families like mysql, php, dotnet)
+          sudo apt-get purge -y $(dpkg-query -W -f='${binary:Package}\n' | grep -E '^mysql|^php|^dotnet|^apache2|^snapd')
+
           # Remove large unwanted packages
-          sudo apt-get purge -y \
+          sudo apt-get purge --ignore-missing -y --allow-remove-essential \
             aria2 ansible azure-cli shellcheck rpm xorriso zsync \
-            esl-erlang firefox gfortran-8 gfortran-9 google-chrome-stable \
-            google-cloud-sdk imagemagick \
+            firefox gfortran-9 google-chrome-stable imagemagick \
             libmagickcore-dev libmagickwand-dev libmagic-dev ant ant-optional kubectl \
-            mercurial apt-transport-https mono-complete libmysqlclient \
+            mercurial apt-transport-https mono-complete \
             unixodbc-dev yarn chrpath libssl-dev libxft-dev \
             libfreetype6 libfreetype6-dev libfontconfig1 libfontconfig1-dev \
             snmp pollinate libpq-dev postgresql-client powershell ruby-full \
-            sphinxsearch subversion mongodb-org microsoft-edge-stable snapd || true
-          
-          # Regex-based purges (for bulk families like mysql, php, dotnet)
-          sudo apt-get purge -y $(dpkg-query -W -f='${binary:Package}\n' | grep -E '^mysql|^php|^dotnet|^apache2|^snapd') || true
-          
+            sphinxsearch subversion microsoft-edge-stable snapd shim-signed
+
           # Clean up
           sudo apt-get autoremove -y
           sudo apt-get autoclean -y
           echo "some packages purged"
-          
+
           df -h
 
       - name: Create and Enable 3G Swap
@@ -57,7 +57,7 @@ jobs:
           free -h
 
       - name: Install ccache
-        run: sudo apt update && sudo apt upgrade -y && sudo apt install -y ccache python3 git curl
+        run: sudo apt update && sudo apt install -y ccache python3 git curl
 
       - name: Configuring ccache for faster builds
         run: |
@@ -351,14 +351,14 @@ jobs:
             ./dist/Image
 
       - name: Save ccache to cache
-        if: ${{ !!steps.ccache-cache.outputs.cache-matched-key }}
+        if: ${{ !steps.ccache-cache.outputs.cache-matched-key }}
         uses: actions/cache/save@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ github.sha }}
 
       - name: Save toolchain to cache
-        if: ${{ !!steps.toolchain-cache.outputs.cache-matched-key }}
+        if: ${{ !steps.toolchain-cache.outputs.cache-matched-key }}
         uses: actions/cache/save@v4
         with:
           path: toolchain
