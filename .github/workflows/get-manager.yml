@@ -51,11 +51,13 @@ jobs:
               REPO="SukiSU-Ultra/SukiSU-Ultra"
               BRANCH="main"
               FILENAME="build-manager.yml"
+              ARTIFACT_NAME="manager"
             elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
               echo "KernelSU Next..."
               REPO="KernelSU-Next/KernelSU-Next"
               BRANCH="next"
               FILENAME="build-manager-ci.yml"
+              ARTIFACT_NAME="Manager"
             fi
 
             BUILD_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -67,7 +69,7 @@ jobs:
                 "https://api.github.com/repos/$REPO/actions/runs/$BUILD_ID/artifacts")
             echo "ARTIFACTS=$ARTIFACTS"
 
-            DOWNLOAD_URL=$(echo "$ARTIFACTS" | jq -r '.artifacts[] | select(.name == "manager") | .archive_download_url')
+            DOWNLOAD_URL=$(echo "$ARTIFACTS" | jq -r '.artifacts[] | select(.name == "$ARTIFACT_NAME") | .archive_download_url')
             echo "DOWNLOAD_URL=$DOWNLOAD_URL"
 
             curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o "Manager(${{ env.KSU_VERSION }}).zip" "$DOWNLOAD_URL"
