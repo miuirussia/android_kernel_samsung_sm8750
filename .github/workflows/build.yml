@@ -408,10 +408,18 @@ jobs:
         run: |
           cd ./AnyKernel3
 
-          ZIP_NAME="S25-AnyKernel3.zip"
+          if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
+            ZIP_NAME="S25-SukiSU-Ultra-AnyKernel3.zip"
+          elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+            ZIP_NAME="S25-KernelSU-Next-AnyKernel3.zip"
+          else
+            echo "Unknown KernelSU variant!"
+            exit 1
+          fi
+
           echo "Creating zip file: $ZIP_NAME..."
           cp ../dist/Image ./Image
-          zip -r "../dist/S25-AnyKernel3.zip" ./*
+          zip -r "../dist/$ZIP_NAME" ./*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
