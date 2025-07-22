@@ -2,6 +2,10 @@ name: Get Manager
 
 on:
   workflow_call:
+    inputs:
+      kernelsu_variant:
+        required: true
+        type: string
 
 jobs:
   get_ksu_manager:
@@ -19,6 +23,7 @@ jobs:
 
       - name: Configure KSU environment
         run: |
+          if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
             echo "This is the SukiSU variant"
             git clone https://github.com/SukiSU-Ultra/SukiSU-Ultra.git
             cd SukiSU-Ultra
@@ -26,16 +31,36 @@ jobs:
             KSU_VERSION=$((10000 + KSU_GIT_VERSION + 700))
             echo $KSU_VERSION
             echo "KSU_VERSION=$KSU_VERSION" >> $GITHUB_ENV
+          elif ["${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+            echo "This is the Next variant"
+            git clone https://github.com/KernelSU-Next/KernelSU-Next.git
+            cd KernelSU-Next
+            KSU_GIT_VERSION=$(git rev-list --count HEAD)
+            KSU_VERSION=$((10000 + KSU_GIT_VERSION + 200))
+            echo $KSU_VERSION
+            echo "KSU_VERSION=$KSU_VERSION" >> $GITHUB_ENV
+          else
+            echo "Unknown KernelSU variant!"
+            exit 1
+          fi
 
       - name: Add KernelSU
         run: |
-            echo "SukiSU..."
-            REPO="SukiSU-Ultra/SukiSU-Ultra"
-            FILENAME="build-manager.yml"
+            if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
+              echo "SukiSU..."
+              REPO="SukiSU-Ultra/SukiSU-Ultra"
+              BRANCH="main"
+              FILENAME="build-manager.yml"
+            elif ["${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+              echo "KernelSU Next..."
+              REPO="KernelSU-Next/KernelSU-Next"
+              BRANCH="next"
+              FILENAME="build-manager-ci.yml"
+            fi
 
             BUILD_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/$REPO/actions/workflows/$FILENAME/runs?status=success" | \
-            jq -r '[.workflow_runs[] | select(.head_branch == "main")][0].id')
+            "https://api.github.com/repos/$REPO/actions/workflows/$FILENAME/runs?branch=$BRANCH&status=success" | \
+            jq -r '.workflow_runs[0].id')
             echo 'BUILD_ID=$BUILD_ID'
 
             ARTIFACTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -45,8 +70,8 @@ jobs:
             DOWNLOAD_URL=$(echo "$ARTIFACTS" | jq -r '.artifacts[] | select(.name == "manager") | .archive_download_url')
 
             echo "$DOWNLOAD_URL"
-            curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o "SukiSU-Manager(${{ env.KSU_VERSION }}).zip" "$DOWNLOAD_URL"
-            echo "Manager downloaded: SukiSU-Manager(${{ env.KSU_VERSION }}).zip"
+            curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o "Manager(${{ env.KSU_VERSION }}).zip" "$DOWNLOAD_URL"
+            echo "Manager downloaded: Manager(${{ env.KSU_VERSION }}).zip"
             unzip *.zip
 
       - name: Upload manager release

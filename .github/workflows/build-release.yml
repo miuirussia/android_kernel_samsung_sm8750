@@ -26,6 +26,8 @@ jobs:
     name: Get manager
     uses: ./.github/workflows/get-manager.yml
     secrets: inherit
+    with:
+      kernelsu_variant: ${{ inputs.kernelsu_variant }}
 
   build:
     name: Build
