@@ -151,7 +151,7 @@ jobs:
             exit 1
           fi
 
-      - name: Apply SUSFS patch for SukiSU Ultra
+      - name: Apply SUSFS patch for ${{ inputs.kernelsu_variant }}
         run: |
           echo "Change directory: $CONFIG..."
           cd "$CONFIG"
