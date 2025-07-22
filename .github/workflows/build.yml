@@ -2,6 +2,11 @@ name: Build kernel
 
 on:
   workflow_call:
+    inputs:
+      kernelsu_variant:
+        description: 'Variant of KernelSU'
+        required: true
+        type: string
 
 jobs:
   build:
@@ -131,11 +136,20 @@ jobs:
           # SukiSU patches
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
 
-      - name: Add SukiSU Ultra
+      - name: Add KernelSU
         run: |
           cd "$CONFIG"
 
-          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-test
+          if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
+            echo "Adding SukiSU Ultra..."
+            curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-test
+          elif ["${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+            echo "Adding KernelSU Next..."
+            curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next-susfs/kernel/setup.sh" | bash -s next-susfs-dev
+          else
+            echo "Unknown KernelSU variant!"
+            exit 1
+          fi
 
       - name: Apply SUSFS patch for SukiSU Ultra
         run: |
@@ -152,21 +166,38 @@ jobs:
 
           patch -p1 --fuzz=3 < 50_add_susfs_in_gki-android15-6.6.patch
 
-      - name: Apply SukiSU Ultra syscall hook
+      - name: Apply syscall hook
         run: |
           echo "Change directory: $CONFIG..."
           cd "$CONFIG"
-
-          cp ../SukiSU_patch/hooks/syscall_hooks.patch ./
-          patch -p1 --fuzz=3 < syscall_hooks.patch
+          if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
+            echo "Applying hooks for SukiSU Ultra..."
+            cp ../SukiSU_patch/hooks/syscall_hooks.patch ./
+            patch -p1 --fuzz=3 < syscall_hooks.patch
+          elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+            echo "Applying hooks for KernelSU Next..."
+            cp ../kernel_patches/next/scope_min_manual_hooks_v1.4.patch ./
+            patch -p1 -F 3 < scope_min_manual_hooks_v1.4.patch
+          else
+            echo "Unknown KernelSU variant!"
+            exit 1
+          fi
 
       - name: Apply Hide Stuff Patches
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
           # Apply spoof patch
-          cp ../SukiSU_patch/69_hide_stuff.patch ./
-          patch -p1 --fuzz=3 < 69_hide_stuff.patch
+          if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
+            cp ../SukiSU_patch/69_hide_stuff.patch ./
+            patch -p1 --fuzz=3 < 69_hide_stuff.patch
+          elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+            cp ../kernel_patches/69_hide_stuff.patch ./
+            patch -p1 --fuzz=3 < 69_hide_stuff.patch
+          else
+            echo "Unknown KernelSU variant!"
+            exit 1
+          fi
 
       - name: Add SUSFS Configuration Settings
         run: |
@@ -178,12 +209,23 @@ jobs:
           # Add KSU configuration settings
           echo "CONFIG_KSU=y" >> ./arch/arm64/configs/sun_gki_defconfig
 
-          # Add SukiSU configuration settings
-          echo "CONFIG_KPM=y" >> ./arch/arm64/configs/sun_gki_defconfig
+          if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
+            echo "Add SukiSU configuration settings..."
 
-          # Add SukiSU manual hook
-          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./arch/arm64/configs/sun_gki_defconfig
+            echo "CONFIG_KPM=y" >> ./arch/arm64/configs/sun_gki_defconfig
+
+            # Add SukiSU manual hook
+            echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/sun_gki_defconfig
+            echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./arch/arm64/configs/sun_gki_defconfig
+          elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+            echo "Add KernelSU Next configuration settings..."
+
+            echo "CONFIG_KSU_KPROBES_HOOK=n" >> ./arch/arm64/configs/sun_gki_defconfig
+            echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/sun_gki_defconfig
+          else
+            echo "Unknown KernelSU variant!"
+            exit 1
+          fi
 
           # Add tmpfs config setting
           echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/sun_gki_defconfig
@@ -316,15 +358,17 @@ jobs:
 
           echo "Kernel release: $kernel_release"
 
-          pushd ./out/arch/arm64/boot
+          if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
+            pushd ./out/arch/arm64/boot
 
-          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
-          chmod +x patch
-          ./patch
-          rm -rf Image
-          mv oImage Image
+            curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
+            chmod +x patch
+            ./patch
+            rm -rf Image
+            mv oImage Image
 
-          popd
+            popd
+          fi
 
           mkdir -p ../dist
           cp ./out/arch/arm64/boot/Image ../dist/Image

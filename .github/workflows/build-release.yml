@@ -12,6 +12,14 @@ on:
         required: true
         type: boolean
         default: false
+      kernelsu_variant:
+        description: 'KernelSU variant'
+        required: true
+        type: choice
+        options:
+          - SukiSU Ultra
+          - KernelSU Next
+        default: SukiSU Ultra
 
 jobs:
   get_manager:
@@ -23,6 +31,8 @@ jobs:
     name: Build
     uses: ./.github/workflows/build.yml
     secrets: inherit
+    with:
+      kernelsu_variant: ${{ inputs.kernelsu_variant }}
 
   trigger-release:
     name: Trigger release
@@ -35,37 +45,6 @@ jobs:
       REPO_OWNER: ${{ github.repository_owner }}
       REPO_NAME: ${{ github.event.repository.name }}
       GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      RELEASE_NAME: "Samsung S25 Ultra kernel With SukiSU Ultra & SUSFS"
-      RELEASE_NOTES: |
-        This release contains both the latest available SukiSU Ultra and SUSFS!
-
-        Modified Kernel Flasher:
-        -> https://github.com/fatalcoder524/KernelFlasher
-
-        KSU Manager:
-        -> https://github.com/SukiSU-Ultra/SukiSU-Ultra
-
-        BBR Optimizer Module:
-        -> https://github.com/fatalcoder524/TCP_Optimiser_Module
-
-        Mountify Module:
-        -> https://github.com/backslashxx/mountify
-
-        Unlimited Hotspot Module:
-        -> https://github.com/felikcat/unlimited-hotspot
-
-        Features:
-        [+] SukiSU Ultra
-        [+] SUSFS ඞ
-        [+] Optimized for Magic Mount usage | Shamiko isn't needed anymore!
-        [+] Google BBR Support | Use [this](https://github.com/fatalcoder524/TCP_Optimiser_Module) to enable
-        [+] Maphide LineageOS Detections
-        [+] Futile Maphide for jit-zygote-cache Detections
-        [+] Mountify Support
-        [+] Unlimited Hotspot Support
-        [+] Forced ECN (Explicit Congestion Notification) for all connections by default
-        [+] Use LZ4 compression algorithm for ZRAM and Hybernation by default if available
-        [+] Some minor optimizations
 
     steps:
       - name: Checkout code
@@ -76,8 +55,16 @@ jobs:
       - name: Generate and Create New Tag
         run: |
             LATEST_TAG=$(gh api repos/$REPO_OWNER/$REPO_NAME/tags --jq '.[0].name')
+            TAG_SUFFIX=""
+
+            if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
+              TAG_SUFFIX="-sukisu"
+            elif ["${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+              TAG_SUFFIX="-next"
+            fi
+
             if [ -z "$LATEST_TAG" ]; then
-              LATEST_TAG="v1.5.9-r0"
+              LATEST_TAG="v1.5.9$TAG_SUFFIX-r0"
             fi
             NEW_TAG=$(echo "$LATEST_TAG" | awk -F'-r' '{suffix=$2; if (!suffix) suffix=0; suffix++; printf "%s-r%d", $1, suffix}')
             echo "New tag: $NEW_TAG"
@@ -90,6 +77,17 @@ jobs:
         with:
           path: ./downloaded-artifacts
 
+      - name: Generate release notes data
+        run: |
+            if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
+              echo "MANAGER_LINK=https://github.com/SukiSU-Ultra/SukiSU-Ultra" >> $GITHUB_ENV
+            elif ["${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+              echo "MANAGER_LINK=https://github.com/KernelSU-Next/KernelSU-Next" >> $GITHUB_ENV
+            else
+              echo "Unknown KernelSU variant!"
+              exit 1
+            fi
+
       - name: Create GitHub Release
         uses: actions/create-release@v1
         with:
@@ -100,6 +98,37 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
           NEW_TAG: ${{ env.NEW_TAG }}
+          RELEASE_NAME: "Samsung S25 Ultra kernel With ${{ inputs.kernelsu_variant }} & SUSFS"
+          RELEASE_NOTES: |
+            This release contains both the latest available ${{ inputs.kernelsu_variant }} and SUSFS!
+
+            Modified Kernel Flasher:
+            -> https://github.com/fatalcoder524/KernelFlasher
+
+            KSU Manager:
+            -> ${{ env.MANAGER_LINK }}
+
+            BBR Optimizer Module:
+            -> https://github.com/fatalcoder524/TCP_Optimiser_Module
+
+            Mountify Module:
+            -> https://github.com/backslashxx/mountify
+
+            Unlimited Hotspot Module:
+            -> https://github.com/felikcat/unlimited-hotspot
+
+            Features:
+            [+] ${{ inputs.kernelsu_variant }}
+            [+] SUSFS ඞ
+            [+] Optimized for Magic Mount usage | Shamiko isn't needed anymore!
+            [+] Google BBR Support | Use [this](https://github.com/fatalcoder524/TCP_Optimiser_Module) to enable
+            [+] Maphide LineageOS Detections
+            [+] Futile Maphide for jit-zygote-cache Detections
+            [+] Mountify Support
+            [+] Unlimited Hotspot Support
+            [+] Forced ECN (Explicit Congestion Notification) for all connections by default
+            [+] Use LZ4 compression algorithm for ZRAM and Hybernation by default if available
+            [+] Some minor optimizations
 
       - name: Upload Release Assets Dynamically
         run: |
