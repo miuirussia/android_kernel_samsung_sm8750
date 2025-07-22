@@ -319,6 +319,28 @@ jobs:
           grep "sysctl_tcp_pacing" tcp_ipv4.c
           ls -t | grep -E 'tcp_|sysctl_'
 
+      - name: Generate kernel info
+        run: |
+          set -x
+
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG"
+
+          LOCALVERSION_BASE=-android15-kdevlab-AYF1
+          version_string="${LOCALVERSION_BASE}-g$(git rev-parse --short HEAD)"
+          echo "${version_string}" > ./localversion
+
+          CURRENT_TIME=$(date -u +"%a %b %d %H:%M:%S UTC %Y")
+          echo "KBUILD_BUILD_TIMESTAMP=${CURRENT_TIME}" >> "$GITHUB_ENV"
+          echo "KBUILD_BUILD_VERSION=1" >> "$GITHUB_ENV"
+
+          echo "Patching mkcompile_h with BUILD_TIME=$CURRENT_TIME"
+          if grep -q 'UTS_VERSION=' "./scripts/mkcompile_h"; then
+            perl -pi -e "s{UTS_VERSION=\"\\\$\\(.*?\\)\"}{UTS_VERSION=\"#1 SMP PREEMPT $CURRENT_TIME\"}" "./scripts/mkcompile_h"
+          else
+            perl -0777 -pi -e "s{cat <<EOF}{cat <<EOF\n#undef UTS_VERSION\n#define UTS_VERSION \"#1 SMP PREEMPT $CURRENT_TIME\" } unless /UTS_VERSION/" "./scripts/mkcompile_h"
+          fi
+
       - name: Build kernel
         run: |
           set -x
@@ -339,7 +361,6 @@ jobs:
           rm ./android/gki_*_protected_modules || echo "No protected exports!"
 
           MAIN_DEFCONFIG=sun_gki_defconfig
-          LOCALVERSION_BASE=-android15-kdevlab-AYF1
           TOOLCHAIN=$(realpath "../toolchain/kernel_platform/prebuilts")
 
           export PATH=$TOOLCHAIN/build-tools/linux-x86/bin:$PATH
@@ -381,9 +402,6 @@ jobs:
 
           echo "Enable ThinLTO"
           ./scripts/config --file out/.config -e LTO_CLANG_THIN -d LTO_CLANG_FULL
-
-          version_string="${LOCALVERSION_BASE}-g$(git rev-parse --short HEAD)"
-          echo "${version_string}" > ./localversion
 
           make -j$(nproc) "${MAKE_ARGS[@]}"
 
