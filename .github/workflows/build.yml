@@ -143,7 +143,7 @@ jobs:
           if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
             echo "Adding SukiSU Ultra..."
             curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-test
-          elif ["${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+          elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
             echo "Adding KernelSU Next..."
             curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next-susfs/kernel/setup.sh" | bash -s next-susfs-dev
           else

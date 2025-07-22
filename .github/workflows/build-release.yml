@@ -61,7 +61,7 @@ jobs:
 
             if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
               TAG_SUFFIX="-sukisu"
-            elif ["${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+            elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
               TAG_SUFFIX="-next"
             fi
 
@@ -83,7 +83,7 @@ jobs:
         run: |
             if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
               echo "MANAGER_LINK=https://github.com/SukiSU-Ultra/SukiSU-Ultra" >> $GITHUB_ENV
-            elif ["${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+            elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
               echo "MANAGER_LINK=https://github.com/KernelSU-Next/KernelSU-Next" >> $GITHUB_ENV
             else
               echo "Unknown KernelSU variant!"

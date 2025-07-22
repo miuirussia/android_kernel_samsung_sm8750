@@ -18,8 +18,8 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - name: Update and install dependencies
-        run: sudo apt update && sudo apt upgrade -y && sudo apt install -y git curl jq
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install -y git curl jq
 
       - name: Configure KSU environment
         run: |
@@ -31,7 +31,7 @@ jobs:
             KSU_VERSION=$((10000 + KSU_GIT_VERSION + 700))
             echo $KSU_VERSION
             echo "KSU_VERSION=$KSU_VERSION" >> $GITHUB_ENV
-          elif ["${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+          elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
             echo "This is the Next variant"
             git clone https://github.com/KernelSU-Next/KernelSU-Next.git
             cd KernelSU-Next
@@ -51,7 +51,7 @@ jobs:
               REPO="SukiSU-Ultra/SukiSU-Ultra"
               BRANCH="main"
               FILENAME="build-manager.yml"
-            elif ["${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+            elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
               echo "KernelSU Next..."
               REPO="KernelSU-Next/KernelSU-Next"
               BRANCH="next"
@@ -61,15 +61,15 @@ jobs:
             BUILD_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/$REPO/actions/workflows/$FILENAME/runs?branch=$BRANCH&status=success" | \
             jq -r '.workflow_runs[0].id')
-            echo 'BUILD_ID=$BUILD_ID'
+            echo "BUILD_ID=$BUILD_ID"
 
             ARTIFACTS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                 "https://api.github.com/repos/$REPO/actions/runs/$BUILD_ID/artifacts")
-            echo 'ARTIFACTS=$ARTIFACTS'
+            echo "ARTIFACTS=$ARTIFACTS"
 
             DOWNLOAD_URL=$(echo "$ARTIFACTS" | jq -r '.artifacts[] | select(.name == "manager") | .archive_download_url')
+            echo "DOWNLOAD_URL=$DOWNLOAD_URL"
 
-            echo "$DOWNLOAD_URL"
             curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o "Manager(${{ env.KSU_VERSION }}).zip" "$DOWNLOAD_URL"
             echo "Manager downloaded: Manager(${{ env.KSU_VERSION }}).zip"
             unzip *.zip
