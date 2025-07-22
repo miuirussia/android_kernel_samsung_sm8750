@@ -153,6 +153,8 @@ jobs:
 
       - name: Apply SUSFS patch for ${{ inputs.kernelsu_variant }}
         run: |
+          set -x
+
           echo "Change directory: $CONFIG..."
           cd "$CONFIG"
 
