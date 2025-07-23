@@ -19,6 +19,17 @@ jobs:
       DEBIAN_FRONTEND: noninteractive
 
     steps:
+      - name: Configure KernelSU variant
+        run: |
+          if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
+            echo "KSU_VARIANT=sukisu" >> "$GITHUB_ENV"
+          elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+            echo "KSU_VARIANT=next" >> "$GITHUB_ENV"
+          else
+            echo "Unknown KernelSU variant!"
+            exit 1
+          fi
+
       - name: Maximize build space
         run: |
           df -h
@@ -84,14 +95,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ env.CONFIG }}
+          key: ccache-${{ env.CONFIG }}-${{ env.KSU_VARIANT }}
 
       - name: Restore toolchain from cache
         id: toolchain-cache
         uses: actions/cache@v4
         with:
           path: toolchain
-          key: toolchain-${{ env.CONFIG }}
+          key: toolchain-${{ env.CONFIG }}-${{ env.KSU_VARIANT }}
 
       - name: Download toolchain
         if: ${{ !steps.toolchain-cache.outputs.cache-hit }}
