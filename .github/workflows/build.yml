@@ -432,6 +432,8 @@ jobs:
           mkdir -p ../dist
           cp ./out/arch/arm64/boot/Image ../dist/Image
 
+          ccache -s
+
       - name: Create AnyKernel zip
         run: |
           cd ./AnyKernel3
