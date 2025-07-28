@@ -492,6 +492,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
+          retention-days: 1
           name: kernel-S25
           path: |
             ./dist/*AnyKernel3.zip
