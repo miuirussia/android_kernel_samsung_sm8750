@@ -243,74 +243,76 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
 
-          echo "Adding configuration settings to gki_defconfig..."
+          CONFIG_FILE=./arch/arm64/configs/$CONFIG_gki_defconfig
+
+          echo "Adding configuration settings to $CONFIG_FILE..."
 
           # Add KSU configuration settings
-          echo "CONFIG_KSU=y" >> ./arch/arm64/configs/sun_gki_defconfig
+          echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
 
           if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
             echo "Add SukiSU configuration settings..."
 
-            echo "CONFIG_KPM=y" >> ./arch/arm64/configs/sun_gki_defconfig
+            echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
 
             # Add SukiSU manual hook
-            echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./arch/arm64/configs/sun_gki_defconfig
-            echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/sun_gki_defconfig
+            echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$CONFIG_FILE"
+            echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
           elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
             echo "Add KernelSU Next configuration settings..."
 
-            echo "CONFIG_KSU_KPROBES_HOOK=n" >> ./arch/arm64/configs/sun_gki_defconfig
-            echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/sun_gki_defconfig
+            echo "CONFIG_KSU_KPROBES_HOOK=n" >> "$CONFIG_FILE"
+            echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
           else
             echo "Unknown KernelSU variant!"
             exit 1
           fi
 
           # Add tmpfs config setting
-          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./arch/arm64/configs/sun_gki_defconfig
+          echo "CONFIG_TMPFS_XATTR=y" >> "$CONFIG_FILE"
+          echo "CONFIG_TMPFS_POSIX_ACL=y" >> "$CONFIG_FILE"
 
           # Add tethering config setting
-          echo "CONFIG_IP_NF_TARGET_TTL=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./arch/arm64/configs/sun_gki_defconfig
+          echo "CONFIG_IP_NF_TARGET_TTL=y" >> "$CONFIG_FILE"
+          echo "CONFIG_IP6_NF_TARGET_HL=y" >> "$CONFIG_FILE"
+          echo "CONFIG_IP6_NF_MATCH_HL=y" >> "$CONFIG_FILE"
 
           # Add bbr and fq config setting
-          echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_TCP_CONG_BBR=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          #echo "CONFIG_DEFAULT_CUBIC=n" >> ./arch/arm64/configs/sun_gki_defconfig
-          #echo "CONFIG_DEFAULT_BBR=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          #echo 'CONFIG_DEFAULT_TCP_CONG="bbr"' >> ./arch/arm64/configs/sun_gki_defconfig
-          #echo "CONFIG_NET_SCH_DEFAULT=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          #echo "CONFIG_DEFAULT_FQ=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          #echo 'CONFIG_DEFAULT_NET_SCH="fq"' >> ./arch/arm64/configs/sun_gki_defconfig
-          #echo "CONFIG_NET_SCH_HTB=n" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_TCP_CONG_BIC=n" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_TCP_CONG_HTCP=n" >> ./arch/arm64/configs/sun_gki_defconfig
+          echo "CONFIG_TCP_CONG_ADVANCED=y" >> "$CONFIG_FILE"
+          echo "CONFIG_TCP_CONG_BBR=y" >> "$CONFIG_FILE"
+          #echo "CONFIG_DEFAULT_CUBIC=n" >> "$CONFIG_FILE"
+          #echo "CONFIG_DEFAULT_BBR=y" >> "$CONFIG_FILE"
+          #echo 'CONFIG_DEFAULT_TCP_CONG="bbr"' >> "$CONFIG_FILE"
+          #echo "CONFIG_NET_SCH_DEFAULT=y" >> "$CONFIG_FILE"
+          #echo "CONFIG_DEFAULT_FQ=y" >> "$CONFIG_FILE"
+          #echo 'CONFIG_DEFAULT_NET_SCH="fq"' >> "$CONFIG_FILE"
+          #echo "CONFIG_NET_SCH_HTB=n" >> "$CONFIG_FILE"
+          echo "CONFIG_TCP_CONG_BIC=n" >> "$CONFIG_FILE"
+          echo "CONFIG_TCP_CONG_WESTWOOD=n" >> "$CONFIG_FILE"
+          echo "CONFIG_TCP_CONG_HTCP=n" >> "$CONFIG_FILE"
 
           # Add SUSFS configuration settings
-          echo "CONFIG_KSU_SUSFS=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_PATH=n" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./arch/arm64/configs/sun_gki_defconfig
-          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./arch/arm64/configs/sun_gki_defconfig
+          echo "CONFIG_KSU_SUSFS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=n" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$CONFIG_FILE"
 
           # Add rcu config setting
-          echo "CONFIG_RCU_TRACE=n" >> ./arch/arm64/configs/sun_gki_defconfig
+          echo "CONFIG_RCU_TRACE=n" >> "$CONFIG_FILE"
 
           # Add personal config setting
-          echo "CONFIG_IP_NF_TARGET_ECN=y" >> ./arch/arm64/configs/sun_gki_defconfig
+          echo "CONFIG_IP_NF_TARGET_ECN=y" >> "$CONFIG_FILE"
 
       - name: Force ECN + Reduce overhead
         run: |
