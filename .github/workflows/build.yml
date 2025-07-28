@@ -360,6 +360,9 @@ jobs:
 
           echo "Export all symbol from abi_gki_aarch64"
           KSU_ROOT=./KernelSU
+          if [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
+            KSU_ROOT=./KernelSU-Next
+          fi
           SYMBOL_LIST=./android/abi_gki_aarch64
 
           echo "Add KernelSU symbols"
