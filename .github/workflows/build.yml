@@ -243,7 +243,7 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
 
-          CONFIG_FILE=./arch/arm64/configs/$CONFIG_gki_defconfig
+          CONFIG_FILE=./arch/arm64/configs/"$CONFIG"_gki_defconfig
 
           echo "Adding configuration settings to $CONFIG_FILE..."
 
