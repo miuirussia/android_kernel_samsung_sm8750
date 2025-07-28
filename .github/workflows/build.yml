@@ -343,8 +343,10 @@ jobs:
           echo "Adding Samsung KDP exported symbols definition to abi_gki_aarch64.stg"
           cp ../kernel_patches/samsung/min_kdp/add-min_kdp-symbols.patch ./
 
-          sed -i '81d' add-min_kdp-symbols.patch # Fix patch lines
-          patch -p1 --no-backup-if-mismatch < add-min_kdp-symbols.patch
+          # Fix patch lines
+          sed -i '81d' add-min_kdp-symbols.patch
+
+          patch -p1 --no-backup-if-mismatch < add-min_kdp-symbols.patch || true
           echo "Successfully added Samsung KDP exported symbols definition to abi_gki_aarch64.stg"
 
           echo "Adding Samsung minimal KDP driver"
