@@ -138,9 +138,21 @@ jobs:
           git clone https://github.com/TheWildJames/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
           git clone https://github.com/ShirkNeko/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/TheWildJames/kernel_patches.git
+          git clone https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch.git
 
           # SukiSU patches
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
+
+      - name: Build kernel patch
+        if: inputs.kernelsu_variant == 'SukiSU Ultra'
+        run: |
+          cd SukiSU_KernelPatch_patch/patch
+
+          mkdir build && cd build
+          cmake .. && make
+          mv patch patch_linux
+
+          echo "KERNELPATCH=$(pwd)/patch_linux" >> "$GITHUB_ENV"
 
       - name: Add KernelSU
         run: |
@@ -461,9 +473,7 @@ jobs:
           if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
             pushd ./out/arch/arm64/boot
 
-            curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
-            chmod +x patch
-            ./patch
+            $KERNELPATCH
             rm -rf Image
             mv oImage Image
 
