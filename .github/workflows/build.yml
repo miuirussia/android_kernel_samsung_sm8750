@@ -138,21 +138,10 @@ jobs:
           git clone https://github.com/TheWildJames/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
           git clone https://github.com/ShirkNeko/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/TheWildJames/kernel_patches.git
-          git clone https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch.git
 
           # SukiSU patches
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
-
-      - name: Build kernel patch
-        if: inputs.kernelsu_variant == 'SukiSU Ultra'
-        run: |
-          cd SukiSU_KernelPatch_patch/patch
-
-          mkdir build && cd build
-          cmake .. && make
-          mv patch patch_linux
-
-          echo "KERNELPATCH=$(pwd)/patch_linux" >> "$GITHUB_ENV"
+          chmod +x $(pwd)/SukiSU_patch/kpm/patch_linux
 
       - name: Add KernelSU
         run: |
@@ -405,6 +394,8 @@ jobs:
       - name: Build kernel
         run: |
           set -x
+
+          KERNELPATCH=$(pwd)/SukiSU_patch/kpm/patch_linux
 
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
