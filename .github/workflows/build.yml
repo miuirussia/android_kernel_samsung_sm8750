@@ -480,7 +480,7 @@ jobs:
         run: |
           echo "Preparing kernel source: $CONFIG"
           cd "$GITHUB_WORKSPACE"
-          tar -cf "source-$CONFIG.tar.gz" \
+          tar -cf "./dist/source-$CONFIG.tar.gz" \
           --use-compress-program=pigz \
           --exclude='.git' --exclude='out' \
           -C "$CONFIG" .
@@ -511,4 +511,4 @@ jobs:
           path: |
             ./dist/*AnyKernel3.zip
             ./dist/Image
-            source-*.tar.gz
+            ./dist/source-*.tar.gz
