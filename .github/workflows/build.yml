@@ -483,7 +483,7 @@ jobs:
           tar -cf "source-$CONFIG.tar.gz" \
           --use-compress-program=pigz \
           --exclude='.git' --exclude='out' \
-          -C "$CONFIG" $CONFIG
+          -C "$CONFIG" .
 
       - name: Upload patched kernel source
         uses: actions/upload-artifact@v4
