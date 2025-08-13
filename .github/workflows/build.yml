@@ -387,7 +387,7 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
 
-          LOCALVERSION_BASE=-android15-kdevlab-AYF1
+          LOCALVERSION_BASE=-android15-kdevlab-AYF6
           version_string="${LOCALVERSION_BASE}-g$(git rev-parse --short HEAD)"
           echo "${version_string}" > ./localversion
 
