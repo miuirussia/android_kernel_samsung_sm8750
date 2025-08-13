@@ -480,18 +480,10 @@ jobs:
         run: |
           echo "Preparing kernel source: $CONFIG"
           cd "$GITHUB_WORKSPACE"
-          tar -cf "source-$CONFIG.tar.gz" \
+          tar -cf "../dist/source-$CONFIG.tar.gz" \
           --use-compress-program=pigz \
           --exclude='.git' --exclude='out' \
           -C "$CONFIG" .
-
-      - name: Upload patched kernel source
-        uses: actions/upload-artifact@v4
-        with:
-          name: source-${{ env.CONFIG }}
-          path: source-${{ env.CONFIG }}.tar.gz
-          compression-level: 0
-          retention-days: 1
 
       - name: Create AnyKernel zip
         run: |
@@ -514,7 +506,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           retention-days: 1
+          compression-level: 0
           name: kernel-S25
           path: |
             ./dist/*AnyKernel3.zip
             ./dist/Image
+            ./dist/source-*.tar.gz
