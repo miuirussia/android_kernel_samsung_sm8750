@@ -16,6 +16,7 @@ jobs:
     env:
       CCACHE_DIR: ${{github.workspace}}/ccache
       CONFIG: sun
+      FW_VERSION: AYG4
       DEBIAN_FRONTEND: noninteractive
 
     steps:
@@ -417,7 +418,7 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
 
-          LOCALVERSION_BASE=-android15-kdevlab-AYG6
+          LOCALVERSION_BASE=-android15-kdevlab-${{ env.FW_VERSION }}
           version_string="${LOCALVERSION_BASE}-g$(git rev-parse --short HEAD)"
           echo "${version_string}" > ./localversion
 
@@ -521,7 +522,7 @@ jobs:
         run: |
           echo "Preparing kernel source: $CONFIG"
           cd "$GITHUB_WORKSPACE"
-          tar -cf "./dist/source-$CONFIG.tar.gz" \
+          tar -cf "./dist/source-$CONFIG-$FW_VERSION.tar.gz" \
           --use-compress-program=pigz \
           --exclude='.git' --exclude='out' \
           -C "$CONFIG" .
@@ -531,9 +532,9 @@ jobs:
           cd ./AnyKernel3
 
           if [ "${{ inputs.kernelsu_variant }}" == "SukiSU Ultra" ]; then
-            ZIP_NAME="S25-SukiSU-Ultra-AnyKernel3.zip"
+            ZIP_NAME="S25-${{ env.FW_VERSION }}-SukiSU-Ultra-AnyKernel3.zip"
           elif [ "${{ inputs.kernelsu_variant }}" == "KernelSU Next" ]; then
-            ZIP_NAME="S25-KernelSU-Next-AnyKernel3.zip"
+            ZIP_NAME="S25-${{ env.FW_VERSION }}-KernelSU-Next-AnyKernel3.zip"
           else
             echo "Unknown KernelSU variant!"
             exit 1
