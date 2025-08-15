@@ -138,6 +138,7 @@ jobs:
           git clone https://github.com/TheWildJames/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
           git clone https://github.com/ShirkNeko/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/TheWildJames/kernel_patches.git
+          git clone https://github.com/zzh20188/GKI_KernelSU_SUSFS.git zzh_kernel_patches
 
           # SukiSU patches
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
@@ -369,6 +370,46 @@ jobs:
           echo "Add KernelSU symbols"
           cat $KSU_ROOT/kernel/export_symbol.txt | awk '{sub("[ \t]+","");print "  "$0}' >> $SYMBOL_LIST
 
+      - name: Update lz4 to 1.10.0
+        run: |
+          set -x
+
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG"
+
+          files=(
+            "lib/lz4/lz4_compress.c"
+            "lib/lz4/lz4_decompress.c"
+            "lib/lz4/lz4defs.h"
+            "lib/lz4/lz4hc_compress.c"
+          )
+
+          for file in "${files[@]}"; do
+            if [ -e "$file" ]; then
+              rm "$file"
+              echo "$file removed"
+            else
+              echo "$file not found"
+            fi
+          done
+
+          cp -r ../zzh_kernel_patches/zram/lz4/* ./lib/lz4/
+          cp -r ../zzh_kernel_patches/zram/include/linux/* ./include/linux/
+          cp -r ../zzh_kernel_patches/zram/6.6/lz4_1.10.0.patch .
+
+          patch -p1 -F 3 --fuzz=5 < lz4_1.10.0.patch
+
+          if [ -f "fs/f2fs/Makefile" ]; then
+            if ! grep -qF "f2fs-\$(CONFIG_F2FS_IOSTAT) += iostat.o" "fs/f2fs/Makefile"; then
+              echo "f2fs-\$(CONFIG_F2FS_IOSTAT) += iostat.o" >> "fs/f2fs/Makefile"
+              echo "Added: f2fs-\$(CONFIG_F2FS_IOSTAT) += iostat.o"
+            else
+              echo "Already exists: f2fs-\$(CONFIG_F2FS_IOSTAT) += iostat.o"
+            fi
+          else
+            echo "File not found: fs/f2fs/Makefile"
+          fi
+
       - name: Generate kernel info
         run: |
           set -x
@@ -376,7 +417,7 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
 
-          LOCALVERSION_BASE=-android15-kdevlab-AYF6
+          LOCALVERSION_BASE=-android15-kdevlab-AYG6
           version_string="${LOCALVERSION_BASE}-g$(git rev-parse --short HEAD)"
           echo "${version_string}" > ./localversion
 
