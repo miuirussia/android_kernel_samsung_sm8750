@@ -16,7 +16,7 @@ jobs:
     env:
       CCACHE_DIR: ${{github.workspace}}/ccache
       CONFIG: sun
-      FW_VERSION: AYG4
+      FW_VERSION: BYI3
       DEBIAN_FRONTEND: noninteractive
 
     steps:
