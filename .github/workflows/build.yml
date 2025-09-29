@@ -173,7 +173,12 @@ jobs:
           cp ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
 
           # Patch Samsung includes
-          sed -i '/#include <trace\/hooks\/blk.h>/a #include <trace/hooks/fs.h>' ./fs/namespace.c
+          if ! grep -qxF '#include <trace/hooks/fs.h>' ./fs/namespace.c; then
+            echo "Patch Samsung includes"
+            sed -i '/#include <trace\/hooks\/blk.h>/a #include <trace\/hooks\/fs.h>' ./fs/namespace.c
+          else
+            echo "Line already present. Skipping insert."
+          fi
 
           patch -p1 --fuzz=3 < 50_add_susfs_in_gki-android15-6.6.patch
 
